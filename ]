@@ -1,18 +1,25 @@
 #!/bin/zsh
 
-function list {
-  # Using ls to transform files in arrays
-  local list_file=($(ls -tr $arg_filename))
-  declare -i count=0
+arg_filename="$pwd"
 
-  print -DP "%B%F{red}$(print -D $arg_filename)%b%f:"
+function list() {
+  print -P  "in %B%F{green}$arg_filename%f%b"
+
+  local list_file=($(ls $arg_filename -t))
+  declare -i count=0
 
   for i in "${list_file[@]}"
   do
     count+=1
-    print -P "%B%F{yellow}[$count]%f%b %b$i%b"
+    print -P  "%B%F{yellow}[$count]%f%b %B$i%b"
     # echo "$count $i"
   done
+
+  exit 1
+}
+
+function debug {
+  echo "You used $@"
 }
 
 function parse {
@@ -22,12 +29,13 @@ function parse {
     "[-h|--help]"
   )
 
-  echo "positional: $@"
-
   zmodload zsh/zutil
   zparseopts -D -F -K -- \
     {h,-help}=flag_help \
     {s,-show-recents}=flag_recents \
+    {l,-list}=flag_list \
+    {c,-choose}:=arg_choose \
+    {q,-quantity}:=arg_quant \
     {f,-filename}:=arg_filename ||
     return 1
 
@@ -36,27 +44,15 @@ function parse {
     exit 1
   fi
 
-  list
+  if [[ -n ${flag_list} ]]; then
+    list "$arg_filename"
+  fi
 
   echo "--show-recents: $flag_recents"
   echo "--list: $flag_list"
   echo "--filename: $arg_filename"
+  echo "positional: $@"
 
 }
 
-## Main
-
-## Check if first argument is a dir
-arg_filename=$pwd
-temp_filename="$(pwd)/$1"
-
-if [[ -d $temp_filename ]] && [[ -n $1 ]];
-then
-  arg_filename=$temp_filename
-  shift
-  parse "$@"
-else
-  arg_filename=$pwd
-  echo "Not a dir"
-  parse "$@"
-fi
+parse "$@"
