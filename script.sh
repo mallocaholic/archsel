@@ -6,18 +6,18 @@ arg_filename=$pwd
 temp_filename="$(pwd)/$(echo $1)"
 
 function list {
-  # Using ls to transform files in arrays
+  # Using wildcard and zsh expressions to get a file list
   list_file=($arg_filename*(om[1,$show_size]))
   declare -i count=0
 
-  print -DP "%B%F{red}$(print -D $arg_filename)%b%f:"
+  print -DP "Recents in %B%F{red}$(print -D $arg_filename)%b%f:"
 
-  # Display ls information
+  # Display filenames
   local filename
   for i in "${list_file[@]}"
   do
     count+=1
-    filename=$(echo "$i" | sed "s/.*\///")
+    filename=$(echo "$i" | sed "s/.*\///") # A way to get only the archive name and extension
     print -P "%B%F{yellow}[$count]%f%b %b$filename%b" | sed "s/.*\///"
 
     # echo "$count $i"
