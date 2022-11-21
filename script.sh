@@ -13,10 +13,13 @@ function list {
   print -DP "%B%F{red}$(print -D $arg_filename)%b%f:"
 
   # Display ls information
+  local filename
   for i in "${list_file[@]}"
   do
     count+=1
-    print -P "%B%F{yellow}[$count]%f%b %b$i%b"
+    filename=$(echo "$i" | sed "s/.*\///")
+    print -P "%B%F{yellow}[$count]%f%b %b$filename%b" | sed "s/.*\///"
+
     # echo "$count $i"
   done
 
@@ -57,20 +60,16 @@ function parse {
 
 if ! [[ $1 == -* ]] && [[ -n $1 ]]; then
   if [[ $1 == \/* ]]; then
-    print 1
     arg_filename=$1/
     shift
   elif [[ -d $temp_filename ]]; then
-    print 2
     arg_filename=$temp_filename/
     shift
   else
-    print 3
     echo "$1: No such file or directory"
     exit 1
   fi
 else
-  print 4
   arg_filename=$(pwd)/
 fi
 
