@@ -1,62 +1,78 @@
 #!/bin/zsh
 
+list_file=()
+show_size=5
+arg_filename=$pwd
+temp_filename="$(pwd)/$(echo $1)"
+
 function list {
   # Using ls to transform files in arrays
-  local list_file=($(ls -tr $arg_filename))
+  list_file=($arg_filename*(om[1,$show_size]))
   declare -i count=0
 
   print -DP "%B%F{red}$(print -D $arg_filename)%b%f:"
 
+  # Display ls information
   for i in "${list_file[@]}"
   do
     count+=1
     print -P "%B%F{yellow}[$count]%f%b %b$i%b"
     # echo "$count $i"
   done
+
 }
 
 function parse {
-  local flag_help flag_list flag_recents
-  local arg_time=1440 arg_choose=1 arg_quant=1
-  local usage=(
-    "[-h|--help]"
-  )
+  local flag_help flag_show
+  local sel_files
+  local helper=( "[-h|--help]" "Blablabla")
 
-  echo "positional: $@"
+  # Debugging info
+  # echo "positional: $@"
 
   zmodload zsh/zutil
   zparseopts -D -F -K -- \
     {h,-help}=flag_help \
-    {s,-show-recents}=flag_recents \
+    {s,-show-all}=flag_show \
     {f,-filename}:=arg_filename ||
     return 1
 
+  # Check help flag
   if [[ -n ${flag_help} ]]; then
-    echo "help message"
+    echo $helper
     exit 1
   fi
 
+  if [[ -n ${flag_show} ]]; then
+    show_size=100
+  fi
+  # Display list information in screen
   list
-
-  echo "--show-recents: $flag_recents"
-  echo "--list: $flag_list"
-  echo "--filename: $arg_filename"
 
 }
 
 ## Main
 
-## Check if first argument is a dir
-arg_filename=$pwd
-temp_filename="$(pwd)/$1"
+## Check if first argument is a valid directory in case that's not a flag
 
-if [[ -d $temp_filename ]] && [[ -n $1 ]];
-then
-  arg_filename=$temp_filename
-  shift
-  parse "$@"
+if ! [[ $1 == -* ]] && [[ -n $1 ]]; then
+  if [[ $1 == \/* ]]; then
+    print 1
+    arg_filename=$1/
+    shift
+  elif [[ -d $temp_filename ]]; then
+    print 2
+    arg_filename=$temp_filename/
+    shift
+  else
+    print 3
+    echo "$1: No such file or directory"
+    exit 1
+  fi
 else
-  arg_filename=$pwd
-  echo "Not a dir"
-  parse "$@"
+  print 4
+  arg_filename=$(pwd)/
 fi
+
+parse $@
+##
